@@ -1,6 +1,7 @@
 from flask import Flask, request
 import requests
 import os
+import json
 
 app = Flask(__name__)
 
@@ -47,30 +48,12 @@ def webhook():
     if request.method == "POST":
         data = request.get_json()
 
-        try:
-            mensaje = data['entry'][0]['changes'][0]['value']['messages'][0]['text']['body']
-            numero = data['entry'][0]['changes'][0]['value']['messages'][0]['from']
-
-            print("[MENSAJE RECIBIDO]", mensaje, "de", numero)
-
-            if mensaje == "1":
-                respuesta = "🔆 Los termotanques solares permiten ahorrar hasta un 80% en gas o electricidad. Agua caliente todo el año! 🚿"
-            elif mensaje == "2":
-                respuesta = "⚡ Los paneles solares generan electricidad y reducen tu factura de luz. Energía limpia y retorno rápido. ☀️"
-            elif mensaje == "3":
-                respuesta = "📞 Un asesor de FILLSUN se comunicará con vos a la brevedad. Gracias por tu interés. 💬"
-            else:
-                respuesta = "Por favor, respondé con una opción válida: 1️⃣ Termotanques, 2️⃣ Paneles, 3️⃣ Asesoramiento."
-
-            enviar_mensaje(numero, respuesta)
-
-        except Exception as e:
-            print("[ERROR EN PROCESAMIENTO]", e)
+        print("[WEBHOOK RECIBIDO] RAW JSON:")
+        print(json.dumps(data, indent=2))
 
         return "ok", 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
 
