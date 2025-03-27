@@ -60,6 +60,15 @@ def webhook():
 
         return "ok", 200
 
+@app.route("/verlogs", methods=["GET"])
+def ver_logs():
+    try:
+        with open("log.txt", "r", encoding="utf-8") as f:
+            contenido = f.read()
+        return f"<pre>{contenido}</pre>", 200
+    except Exception as e:
+        return f"Error al leer log.txt: {e}", 500
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
