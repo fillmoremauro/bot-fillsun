@@ -6,22 +6,24 @@ app = Flask(__name__)
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
     print("📥 Entró al webhook")
-    print("➡️ Método recibido:", request.method)
+    print("➡️ Método:", request.method)
 
     if request.method == "GET":
-        verify_token = "fillsun_bot_token"
         mode = request.args.get("hub.mode")
         token = request.args.get("hub.verify_token")
         challenge = request.args.get("hub.challenge")
-        if mode == "subscribe" and token == verify_token:
+        if mode == "subscribe" and token == "fillsun_bot_token":
+            print("✅ Verificación exitosa")
             return challenge, 200
-        else:
-            return "Token inválido", 403
+        return "Token inválido", 403
 
     if request.method == "POST":
-        print("✅ LLEGÓ UN POST A /webhook")
-        print("🔍 Headers:", dict(request.headers))
-        print("🧾 Body (raw):", request.data.decode("utf-8"))
+        print("✅ POST recibido")
+        try:
+            data = request.get_json()
+            print("🧾 DATA:", data)
+        except Exception as e:
+            print("❌ Error parseando JSON:", e)
         return "ok", 200
 
     return "Método no permitido", 405
