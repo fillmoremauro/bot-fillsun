@@ -43,36 +43,17 @@ def webhook():
             return "Token inválido", 403
 
     if request.method == "POST":
-        print("[POST RECIBIDO EN /webhook]")
+        print("\n🔔 [POST RECIBIDO EN /webhook] 🔔")
+        print("Headers:", dict(request.headers))
+
+        raw_body = request.data.decode("utf-8")
+        print("Cuerpo crudo:", raw_body)
+
         try:
             data = request.get_json(force=True)
-            print("[DATA JSON RECIBIDA]:", data)
-
-            entry = data.get("entry", [])[0]
-            changes = entry.get("changes", [])[0]
-            value = changes.get("value", {})
-            mensajes = value.get("messages")
-
-            if mensajes:
-                mensaje = mensajes[0]["text"]["body"]
-                numero = mensajes[0]["from"]
-                print("Mensaje:", mensaje, "de", numero)
-
-                if mensaje == "1":
-                    respuesta = "🔆 Ahorro con termotanques solares"
-                elif mensaje == "2":
-                    respuesta = "⚡ Beneficios de paneles solares"
-                elif mensaje == "3":
-                    respuesta = "📞 Un asesor se contactará"
-                else:
-                    respuesta = "Seleccioná 1️⃣ 2️⃣ o 3️⃣ para comenzar."
-
-                enviar_mensaje(numero, respuesta)
-            else:
-                print("[INFO] No se encontró 'messages' en el JSON")
-
+            print("JSON parseado:", data)
         except Exception as e:
-            print("[ERROR GRAVE] No se pudo procesar el JSON:", str(e))
+            print("[ERROR AL PARSEAR JSON]", str(e))
 
         return "ok", 200
 
