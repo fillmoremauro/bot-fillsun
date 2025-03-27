@@ -9,13 +9,9 @@ app = Flask(__name__)
 WHATSAPP_TOKEN = "EAAJghw0LOqsBO6NSkDUKE3fR0UtXGL5NXVsm0PqJyBqOoLjSebOPihihrZAY8ZA9mV7ZB3kRSlhQ5pQHsk1SzkLzb59WlAnkqz4DRjNFuQmNBO72KqFO9Y7Uda79wmPFIsigMoWDZBrhSjATpCWGgjhMzQWCNhTArwrlZAlHHH59RgSvzIyXtUhAXlieB4gHhMFlkJaxlZAkKulSo9nUIg2xANuOlxmZBqfdhFJwnqq"
 PHONE_NUMBER_ID = "598198433374729"
 
-# URL de envío de mensajes
 URL = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages"
 
-def log_to_file(text):
-    with open("log.txt", "a", encoding="utf-8") as f:
-        f.write(text + "\n")
-
+# Función para enviar mensajes por WhatsApp
 def enviar_mensaje(numero, mensaje):
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
@@ -28,10 +24,12 @@ def enviar_mensaje(numero, mensaje):
         "text": {"body": mensaje}
     }
 
-    log_to_file(f"[ENVIANDO MENSAJE] A: {numero}\nMensaje: {mensaje}")
+    print("[ENVIANDO MENSAJE]")
+    print("A:", numero)
+    print("Mensaje:", mensaje)
 
     response = requests.post(URL, headers=headers, json=data)
-    log_to_file(f"Respuesta de la API: {response.status_code} {response.text}")
+    print("Respuesta de la API:", response.status_code, response.text)
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -46,29 +44,64 @@ def webhook():
             return "Token inválido", 403
 
     if request.method == "POST":
-        log_to_file("\n🔔 [POST RECIBIDO EN /webhook] 🔔")
-        log_to_file("Headers: " + str(dict(request.headers)))
-
-        raw_body = request.data.decode("utf-8")
-        log_to_file("Cuerpo crudo: " + raw_body)
+        print("\n🔔 [POST RECIBIDO EN /webhook] 🔔")
+        print("Headers:", dict(request.headers))
+        raw_data = request.data.decode("utf-8")
+        print("Cuerpo crudo:", raw_data)
 
         try:
-            data = request.get_json(force=True)
-            log_to_file("JSON parseado: " + json.dumps(data, indent=2))
+            data = json.loads(raw_data)
+            print("JSON parseado:", json.dumps(data, indent=2))
+
+            entry = data.get("entry", [{}])[0]
+            changes = entry.get("changes", [{}])[0]
+            value = changes.get("value", {})
+
+            if "messages" in value:
+                mensaje = value["messages"][0]["text"]["body"]
+                numero = value["messages"][0]["from"]
+                print("Mensaje recibido:", mensaje, "de", numero)
+
+                if mensaje == "1":
+                    respuesta = (
+                        "🔆 ¡Gran elección! Los termotanques solares pueden ayudarte a ahorrar hasta un 80% en gas o electricidad cada mes.\n"
+                        "🌞 Funcionan con energía solar y te garantizan agua caliente todo el año, incluso en días nublados.\n"
+                        "🔧 Mínimo mantenimiento, larga vida útil y una inversión que se paga sola en poco tiempo.\n"
+                        "📲 ¿Querés ver modelos o precios?"
+                    )
+                elif mensaje == "2":
+                    respuesta = (
+                        "⚡ ¡Estás un paso más cerca de liberarte de las facturas de luz!\n"
+                        "Los paneles solares fotovoltaicos generan tu propia electricidad y pueden reducir tu consumo hasta un 100%.\n"
+                        "🌎 Energía limpia, ahorro real y aumento del valor de tu propiedad.\n"
+                        "📈 Instalación profesional y asesoramiento personalizado.\n"
+                        "📲 ¿Querés ver modelos o precios de kits?"
+                    )
+                elif mensaje == "3":
+                    respuesta = (
+                        "📞 ¡Perfecto! Un asesor de FILLSUN Argentina se va a comunicar con vos en breve.\n"
+                        "💬 Podés contarnos si querés agua caliente, energía eléctrica, o ambos.\n"
+                        "🚀 Cuanto más sepamos, mejor podemos ayudarte a maximizar tu ahorro.\n"
+                        "🙏 ¡Gracias por confiar en nosotros! 🌞"
+                    )
+                else:
+                    respuesta = (
+                        "Por favor, respondé con una opción válida:\n"
+                        "1️⃣ Termotanques\n"
+                        "2️⃣ Paneles\n"
+                        "3️⃣ Asesoramiento"
+                    )
+
+                enviar_mensaje(numero, respuesta)
+            else:
+                print("[INFO] No se encontró 'messages' en el webhook recibido.")
+
         except Exception as e:
-            log_to_file("[ERROR AL PARSEAR JSON] " + str(e))
+            print("[ERROR EN PROCESAMIENTO]", str(e))
 
         return "ok", 200
-
-@app.route("/verlogs", methods=["GET"])
-def ver_logs():
-    try:
-        with open("log.txt", "r", encoding="utf-8") as f:
-            contenido = f.read()
-        return f"<pre>{contenido}</pre>", 200
-    except Exception as e:
-        return f"Error al leer log.txt: {e}", 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
