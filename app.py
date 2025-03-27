@@ -5,6 +5,9 @@ app = Flask(__name__)
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
+    print("📥 Entró al webhook")
+    print("➡️ Método recibido:", request.method)
+
     if request.method == "GET":
         verify_token = "fillsun_bot_token"
         mode = request.args.get("hub.mode")
@@ -26,4 +29,3 @@ def webhook():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
