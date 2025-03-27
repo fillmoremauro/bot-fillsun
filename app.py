@@ -12,7 +12,6 @@ PHONE_NUMBER_ID = "598198433374729"
 # URL de envío de mensajes
 URL = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages"
 
-# Función para enviar mensajes por WhatsApp
 def enviar_mensaje(numero, mensaje):
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
@@ -46,8 +45,34 @@ def webhook():
     if request.method == "POST":
         data = request.get_json()
 
-        print("[WEBHOOK RAW JSON]")
-        print(json.dumps(data, indent=2))
+        print("[WEBHOOK RECIBIDO] Claves del JSON:", list(data.keys()))
+
+        try:
+            entry = data.get("entry", [])[0]
+            changes = entry.get("changes", [])[0]
+            value = changes.get("value", {})
+            mensajes = value.get("messages")
+
+            if mensajes:
+                mensaje = mensajes[0]["text"]["body"]
+                numero = mensajes[0]["from"]
+                print("Mensaje:", mensaje, "de", numero)
+
+                if mensaje == "1":
+                    respuesta = "🔆 Ahorro con termotanques solares"
+                elif mensaje == "2":
+                    respuesta = "⚡ Beneficios de paneles solares"
+                elif mensaje == "3":
+                    respuesta = "📞 Un asesor se contactará"
+                else:
+                    respuesta = "Seleccioná 1️⃣ 2️⃣ o 3️⃣ para comenzar."
+
+                enviar_mensaje(numero, respuesta)
+            else:
+                print("[INFO] No se encontró 'messages' en el JSON")
+
+        except Exception as e:
+            print("[ERROR PROCESANDO EL JSON]", str(e))
 
         return "ok", 200
 
