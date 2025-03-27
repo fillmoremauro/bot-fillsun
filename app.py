@@ -43,11 +43,11 @@ def webhook():
             return "Token inválido", 403
 
     if request.method == "POST":
-        data = request.get_json()
-
-        print("[WEBHOOK RECIBIDO] Claves del JSON:", list(data.keys()))
-
+        print("[POST RECIBIDO EN /webhook]")
         try:
+            data = request.get_json(force=True)
+            print("[DATA JSON RECIBIDA]:", data)
+
             entry = data.get("entry", [])[0]
             changes = entry.get("changes", [])[0]
             value = changes.get("value", {})
@@ -72,7 +72,7 @@ def webhook():
                 print("[INFO] No se encontró 'messages' en el JSON")
 
         except Exception as e:
-            print("[ERROR PROCESANDO EL JSON]", str(e))
+            print("[ERROR GRAVE] No se pudo procesar el JSON:", str(e))
 
         return "ok", 200
 
