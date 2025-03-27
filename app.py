@@ -12,6 +12,10 @@ PHONE_NUMBER_ID = "598198433374729"
 # URL de envío de mensajes
 URL = f"https://graph.facebook.com/v17.0/{PHONE_NUMBER_ID}/messages"
 
+def log_to_file(text):
+    with open("log.txt", "a", encoding="utf-8") as f:
+        f.write(text + "\n")
+
 def enviar_mensaje(numero, mensaje):
     headers = {
         "Authorization": f"Bearer {WHATSAPP_TOKEN}",
@@ -24,11 +28,10 @@ def enviar_mensaje(numero, mensaje):
         "text": {"body": mensaje}
     }
 
-    print("[ENVIANDO MENSAJE] A:", numero)
-    print("Mensaje:", mensaje)
+    log_to_file(f"[ENVIANDO MENSAJE] A: {numero}\nMensaje: {mensaje}")
 
     response = requests.post(URL, headers=headers, json=data)
-    print("Respuesta de la API:", response.status_code, response.text)
+    log_to_file(f"Respuesta de la API: {response.status_code} {response.text}")
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -43,17 +46,17 @@ def webhook():
             return "Token inválido", 403
 
     if request.method == "POST":
-        print("\n🔔 [POST RECIBIDO EN /webhook] 🔔")
-        print("Headers:", dict(request.headers))
+        log_to_file("\n🔔 [POST RECIBIDO EN /webhook] 🔔")
+        log_to_file("Headers: " + str(dict(request.headers)))
 
         raw_body = request.data.decode("utf-8")
-        print("Cuerpo crudo:", raw_body)
+        log_to_file("Cuerpo crudo: " + raw_body)
 
         try:
             data = request.get_json(force=True)
-            print("JSON parseado:", data)
+            log_to_file("JSON parseado: " + json.dumps(data, indent=2))
         except Exception as e:
-            print("[ERROR AL PARSEAR JSON]", str(e))
+            log_to_file("[ERROR AL PARSEAR JSON] " + str(e))
 
         return "ok", 200
 
