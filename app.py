@@ -23,7 +23,14 @@ def enviar_mensaje(numero, mensaje):
         "type": "text",
         "text": {"body": mensaje}
     }
-    requests.post(URL, headers=headers, json=data)
+
+    print("[ENVIANDO MENSAJE]")
+    print("A:", numero)
+    print("Mensaje:", mensaje)
+    print("Payload:", data)
+
+    response = requests.post(URL, headers=headers, json=data)
+    print("Respuesta de la API:", response.status_code, response.text)
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -44,6 +51,8 @@ def webhook():
             mensaje = data['entry'][0]['changes'][0]['value']['messages'][0]['text']['body']
             numero = data['entry'][0]['changes'][0]['value']['messages'][0]['from']
 
+            print("[MENSAJE RECIBIDO]", mensaje, "de", numero)
+
             if mensaje == "1":
                 respuesta = "🔆 Los termotanques solares permiten ahorrar hasta un 80% en gas o electricidad. Agua caliente todo el año! 🚿"
             elif mensaje == "2":
@@ -56,7 +65,7 @@ def webhook():
             enviar_mensaje(numero, respuesta)
 
         except Exception as e:
-            print("[ERROR]", e)
+            print("[ERROR EN PROCESAMIENTO]", e)
 
         return "ok", 200
 
